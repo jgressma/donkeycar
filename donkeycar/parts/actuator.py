@@ -217,22 +217,20 @@ class PWMThrottle:
 
     def __init__(self,
                  controller=None,
-                 max_pulse=300,
-                 min_pulse=490,
-                 zero_pulse=350):
+                 max_pulse=4095,
+                 min_pulse=-4095,
+                 zero_pulse=0,
+                 inverted=False):
 
         self.controller = controller
         self.max_pulse = max_pulse
         self.min_pulse = min_pulse
         self.zero_pulse = zero_pulse
         self.pulse = zero_pulse
+        self.inversion_factor = -1 if inverted else 1
 
         # send zero pulse to calibrate ESC
         print("Init ESC")
-        self.controller.set_pulse(self.max_pulse)
-        time.sleep(0.01)
-        self.controller.set_pulse(self.min_pulse)
-        time.sleep(0.01)
         self.controller.set_pulse(self.zero_pulse)
         time.sleep(1)
         self.running = True
@@ -243,12 +241,32 @@ class PWMThrottle:
             self.controller.set_pulse(self.pulse)
 
     def run_threaded(self, throttle):
+        # sys.stdout.write(f"throttle: {throttle}\n")
+
+        throttle = self.inversion_factor * throttle
+
         if throttle > 0:
             self.pulse = dk.utils.map_range(throttle, 0, self.MAX_THROTTLE,
                                             self.zero_pulse, self.max_pulse)
+            self.controller.pwm.set_pwm(self.controller.channel,0,self.pulse)
+            self.controller.pwm.set_pwm(self.controller.channel+1,0,4095)
+            self.controller.pwm.set_pwm(self.controller.channel+2,0,0)
+            self.controller.pwm.set_pwm(self.controller.channel+3,0,0)
+            self.controller.pwm.set_pwm(self.controller.channel+4,0,self.pulse)
+            self.controller.pwm.set_pwm(self.controller.channel+7,0,self.pulse)
+            self.controller.pwm.set_pwm(self.controller.channel+6,0,4095)
+            self.controller.pwm.set_pwm(self.controller.channel+5,0,0)
         else:
             self.pulse = dk.utils.map_range(throttle, self.MIN_THROTTLE, 0,
                                             self.min_pulse, self.zero_pulse)
+            self.controller.pwm.set_pwm(self.controller.channel,0,-self.pulse)
+            self.controller.pwm.set_pwm(self.controller.channel+2,0,4095)
+            self.controller.pwm.set_pwm(self.controller.channel+1,0,0)
+            self.controller.pwm.set_pwm(self.controller.channel+3,0,-self.pulse)
+            self.controller.pwm.set_pwm(self.controller.channel+4,0,0)
+            self.controller.pwm.set_pwm(self.controller.channel+7,0,-self.pulse)
+            self.controller.pwm.set_pwm(self.controller.channel+5,0,4095)
+            self.controller.pwm.set_pwm(self.controller.channel+6,0,0)
 
     def run(self, throttle):
         self.run_threaded(throttle)
