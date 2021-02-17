@@ -25,12 +25,12 @@ DRIVE_LOOP_HZ = 20      # the vehicle loop will pause if faster than this speed.
 MAX_LOOPS = None        # the vehicle loop can abort after this many iterations, when given a positive integer.
 
 #CAMERA
-CAMERA_TYPE = "PICAM"   # (PICAM|WEBCAM|CVCAM|CSIC|V4L|D435|MOCK|IMAGE_LIST)
-IMAGE_W = 160
-IMAGE_H = 120
+CAMERA_TYPE = "CSIC"   # (PICAM|WEBCAM|CVCAM|CSIC|V4L|D435|MOCK|IMAGE_LIST)
+IMAGE_W = 224
+IMAGE_H = 224
 IMAGE_DEPTH = 3         # default RGB=3, make 1 for mono
 CAMERA_FRAMERATE = DRIVE_LOOP_HZ
-CAMERA_VFLIP = False
+CAMERA_VFLIP = True
 CAMERA_HFLIP = False
 # For CSIC camera - If the camera is mounted in a rotated position, changing the below parameter will correct the output frame orientation
 CSIC_CAM_GSTREAMER_FLIP_PARM = 0 # (0 => none , 4 => Flip horizontally, 6 => Flip vertically)
@@ -40,7 +40,8 @@ CSIC_CAM_GSTREAMER_FLIP_PARM = 0 # (0 => none , 4 => Flip horizontally, 6 => Fli
 
 #9865, over rides only if needed, ie. TX2..
 PCA9685_I2C_ADDR = 0x40     #I2C address, use i2cdetect to validate this number
-PCA9685_I2C_BUSNUM = None   #None will auto detect, which is fine on the pi. But other platforms should specify the bus num.
+PCA9685_I2C_ADDR1 = 0x60    #I2C address, use i2cdetect to validate this number
+PCA9685_I2C_BUSNUM = 8   #None will auto detect, which is fine on the pi. But other platforms should specify the bus num.
 
 #SSD1306_128_32
 USE_SSD1306_128_32 = False    # Enable the SSD_1306 OLED Display
@@ -55,7 +56,7 @@ SSD1306_128_32_I2C_BUSNUM = 1 # I2C bus number
 DRIVE_TRAIN_TYPE = "SERVO_ESC" # SERVO_ESC|DC_STEER_THROTTLE|DC_TWO_WHEEL|SERVO_HBRIDGE_PWM|PIGPIO_PWM|MM1|MOCK
 
 #STEERING
-STEERING_CHANNEL = 1            #channel on the 9685 pwm board 0-15
+STEERING_CHANNEL = 0            #channel on the 9685 pwm board 0-15
 STEERING_LEFT_PWM = 460         #pwm value for full left steering
 STEERING_RIGHT_PWM = 290        #pwm value for full right steering
 
@@ -66,14 +67,14 @@ STEERING_PWM_INVERTED = False   #If PWM needs to be inverted
 
 #THROTTLE
 THROTTLE_CHANNEL = 0            #channel on the 9685 pwm board 0-15
-THROTTLE_FORWARD_PWM = 500      #pwm value for max forward throttle
-THROTTLE_STOPPED_PWM = 370      #pwm value for no movement
-THROTTLE_REVERSE_PWM = 220      #pwm value for max reverse throttle
+THROTTLE_FORWARD_PWM = 4095     #pwm value for max forward throttle
+THROTTLE_STOPPED_PWM = 0        #pwm value for no movement
+THROTTLE_REVERSE_PWM = -4095    #pwm value for max reverse throttle
 
 #THROTTLE FOR PIGPIO_PWM
 THROTTLE_PWM_PIN = 18           #Pin numbering according to Broadcom numbers
 THROTTLE_PWM_FREQ = 50          #Frequency for PWM
-THROTTLE_PWM_INVERTED = False   #If PWM needs to be inverted
+THROTTLE_PWM_INVERTED = True    #If PWM needs to be inverted
 
 #DC_STEER_THROTTLE with one motor as steering, one as drive
 #these GPIO pinouts are only used for the DRIVE_TRAIN_TYPE=DC_STEER_THROTTLE
@@ -140,7 +141,7 @@ WEB_INIT_MODE = "user"              # which control mode to start in. one of use
 
 #JOYSTICK
 USE_JOYSTICK_AS_DEFAULT = False      #when starting the manage.py, when True, will not require a --js option to use the joystick
-JOYSTICK_MAX_THROTTLE = 0.5         #this scalar is multiplied with the -1 to 1 throttle value to limit the maximum throttle. This can help if you drop the controller or just don't need the full speed available.
+JOYSTICK_MAX_THROTTLE = 0.8         #this scalar is multiplied with the -1 to 1 throttle value to limit the maximum throttle. This can help if you drop the controller or just don't need the full speed available.
 JOYSTICK_STEERING_SCALE = 1.0       #some people want a steering that is less sensitve. This scalar is multiplied with the steering -1 to 1. It can be negative to reverse dir.
 AUTO_RECORD_ON_THROTTLE = True      #if true, we will record whenever throttle is not zero. if false, you must manually toggle recording with some other trigger. Usually circle button on joystick.
 CONTROLLER_TYPE = 'xbox'            #(ps3|ps4|xbox|nimbus|wiiu|F710|rc3|MM1|custom) custom will run the my_joystick.py controller written by the `donkey createjs` command
@@ -154,7 +155,7 @@ JOYSTICK_DEVICE_FILE = "/dev/input/js0" # this is the unix file use to access th
 #For the categorical model, this limits the upper bound of the learned throttle
 #it's very IMPORTANT that this value is matched from the training PC config.py and the robot.py
 #and ideally wouldn't change once set.
-MODEL_CATEGORICAL_MAX_THROTTLE_RANGE = 0.5
+MODEL_CATEGORICAL_MAX_THROTTLE_RANGE = 0.8
 
 #RNN or 3D
 SEQUENCE_LENGTH = 3             #some models use a number of images over time. This controls how many.
@@ -174,12 +175,12 @@ MM1_MAX_FORWARD = 2000          # Max throttle to go fowrward. The bigger the fa
 MM1_STOPPED_PWM = 1500
 MM1_MAX_REVERSE = 1000          # Max throttle to go reverse. The smaller the faster
 MM1_SHOW_STEERING_VALUE = False
-# Serial port 
+# Serial port
 # -- Default Pi: '/dev/ttyS0'
 # -- Jetson Nano: '/dev/ttyTHS1'
 # -- Google coral: '/dev/ttymxc0'
 # -- Windows: 'COM3', Arduino: '/dev/ttyACM0'
-# -- MacOS/Linux:please use 'ls /dev/tty.*' to find the correct serial port for mm1 
+# -- MacOS/Linux:please use 'ls /dev/tty.*' to find the correct serial port for mm1
 #  eg.'/dev/tty.usbmodemXXXXXX' and replace the port accordingly
 MM1_SERIAL_PORT = '/dev/ttyS0'  # Serial Port for reading and sending MM1 data.
 
@@ -202,7 +203,7 @@ HAVE_PERFMON = False
 
 #RECORD OPTIONS
 RECORD_DURING_AI = False        #normally we do not record during ai mode. Set this to true to get image and steering records for your Ai. Be careful not to use them to train.
-AUTO_CREATE_NEW_TUB = False     #create a new tub (tub_YY_MM_DD) directory when recording or append records to data directory directly
+AUTO_CREATE_NEW_TUB = True     #create a new tub (tub_YY_MM_DD) directory when recording or append records to data directory directly
 
 #LED
 HAVE_RGB_LED = False            #do you have an RGB LED like https://www.amazon.com/dp/B07BNRZWNF

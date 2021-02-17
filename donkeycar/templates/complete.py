@@ -11,9 +11,10 @@ Options:
     --js                    Use physical joystick.
     -f --file=<file>        A text file containing paths to tub files, one per line. Option may be used more than once.
     --meta=<key:value>      Key/Value strings describing describing a piece of meta data about this drive. Option may be used more than once.
-    --myconfig=filename     Specify myconfig file to use. 
+    --myconfig=filename     Specify myconfig file to use.
                             [default: myconfig.py]
 """
+import cv2
 import os
 import time
 
@@ -115,7 +116,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         inputs = []
         threaded = True
         if cfg.DONKEY_GYM:
-            from donkeycar.parts.dgym import DonkeyGymEnv 
+            from donkeycar.parts.dgym import DonkeyGymEnv
             cam = DonkeyGymEnv(cfg.DONKEY_SIM_PATH, host=cfg.SIM_HOST, env_name=cfg.DONKEY_GYM_ENV_NAME, conf=cfg.GYM_CONF, delay=cfg.SIM_ARTIFICIAL_LATENCY)
             threaded = True
             inputs = ['angle', 'throttle']
@@ -152,7 +153,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         #modify max_throttle closer to 1.0 to have more power
         #modify steering_scale lower than 1.0 to have less responsive steering
         if cfg.CONTROLLER_TYPE == "MM1":
-            from donkeycar.parts.robohat import RoboHATController            
+            from donkeycar.parts.robohat import RoboHATController
             ctr = RoboHATController(cfg)
         elif "custom" == cfg.CONTROLLER_TYPE:
             #
@@ -175,8 +176,8 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
                 netwkJs = JoyStickSub(cfg.NETWORK_JS_SERVER_IP)
                 V.add(netwkJs, threaded=True)
                 ctr.js = netwkJs
-        
-        V.add(ctr, 
+
+        V.add(ctr,
           inputs=['cam/image_array'],
           outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
           threaded=True)
@@ -185,7 +186,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         #This web controller will create a web server that is capable
         #of managing steering, throttle, and modes, and more.
         ctr = LocalWebController(port=cfg.WEB_CONTROL_PORT, mode=cfg.WEB_INIT_MODE)
-        
+
         V.add(ctr,
           inputs=['cam/image_array', 'tub/num_records'],
           outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
@@ -414,7 +415,7 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
         V.add(kl, inputs=inputs,
               outputs=outputs,
               run_condition='run_pilot')
-    
+
     if cfg.STOP_SIGN_DETECTOR:
         from donkeycar.parts.object_detector.stop_sign_detector import StopSignDetector
         V.add(StopSignDetector(cfg.STOP_SIGN_MIN_SCORE, cfg.STOP_SIGN_SHOW_BOUNDING_BOX), inputs=['cam/image_array', 'pilot/throttle'], outputs=['pilot/throttle', 'cam/image_array'])
@@ -487,7 +488,6 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
         #throttle_controller = PCA9685(cfg.THROTTLE_CHANNEL, cfg.PCA9685_I2C_ADDR, busnum=cfg.PCA9685_I2C_BUSNUM)
         throttle_controller = PCA9685(cfg.THROTTLE_CHANNEL, cfg.PCA9685_I2C_ADDR1, frequency=1600, busnum=cfg.PCA9685_I2C_BUSNUM)
-
         throttle = PWMThrottle(controller=throttle_controller,
                                         max_pulse=cfg.THROTTLE_FORWARD_PWM,
                                         zero_pulse=cfg.THROTTLE_STOPPED_PWM,
@@ -538,22 +538,22 @@ def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type
 
         V.add(steering, inputs=['angle'], threaded=True)
         V.add(motor, inputs=["throttle"])
-        
+
     elif cfg.DRIVE_TRAIN_TYPE == "MM1":
         from donkeycar.parts.robohat import RoboHATDriver
         V.add(RoboHATDriver(cfg), inputs=['angle', 'throttle'])
-    
+
     elif cfg.DRIVE_TRAIN_TYPE == "PIGPIO_PWM":
         from donkeycar.parts.actuator import PWMSteering, PWMThrottle, PiGPIO_PWM
         steering_controller = PiGPIO_PWM(cfg.STEERING_PWM_PIN, freq=cfg.STEERING_PWM_FREQ, inverted=cfg.STEERING_PWM_INVERTED)
         steering = PWMSteering(controller=steering_controller,
-                                        left_pulse=cfg.STEERING_LEFT_PWM, 
+                                        left_pulse=cfg.STEERING_LEFT_PWM,
                                         right_pulse=cfg.STEERING_RIGHT_PWM)
-        
+
         throttle_controller = PiGPIO_PWM(cfg.THROTTLE_PWM_PIN, freq=cfg.THROTTLE_PWM_FREQ, inverted=cfg.THROTTLE_PWM_INVERTED)
         throttle = PWMThrottle(controller=throttle_controller,
                                             max_pulse=cfg.THROTTLE_FORWARD_PWM,
-                                            zero_pulse=cfg.THROTTLE_STOPPED_PWM, 
+                                            zero_pulse=cfg.THROTTLE_STOPPED_PWM,
                                             min_pulse=cfg.THROTTLE_REVERSE_PWM)
         V.add(steering, inputs=['angle'], threaded=True)
         V.add(throttle, inputs=['throttle'], threaded=True)

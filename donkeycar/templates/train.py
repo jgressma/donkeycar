@@ -10,9 +10,6 @@ Options:
     -h --help              Show this screen.
 """
 
-# Import OpenCV first, see https://github.com/opencv/opencv/issues/14884
-import cv2
-
 from docopt import docopt
 import donkeycar as dk
 from donkeycar.pipeline.training import train
